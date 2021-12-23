@@ -1,0 +1,18 @@
+
+echo "--> building rospack"
+cd rospack/
+docker buildx build --platform linux/amd64,linux/arm64 . --tag cristidragomir97/rospack --push --no-cache
+cd ../
+
+for D in *; do
+    if [ -d "${D}" ]; then
+        if [ $D == "rospack" ] ; then  
+            continue
+        else
+            cd $D
+            echo "--> building image: ${D}" 
+            docker buildx build --platform linux/amd64,linux/arm64 . --tag cristidragomir97/$D --push --no-cache
+            cd ..
+        fi
+    fi
+done
