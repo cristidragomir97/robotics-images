@@ -53,6 +53,3 @@ RUN . /opt/ros/noetic/setup.sh \
 
 # SOURCE ROS ENVIRONMENT FROM SHARED VOLUMEs
 # AND RUN THE APPLICATION
-CMD . /opt/ros/noetic/setup.sh \
-    && . /root/catkin_ws/devel/setup.sh \
-    && rosrun rosboard rosboard_node

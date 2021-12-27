@@ -1,18 +1,27 @@
-FROM ros:noetic-ros-core-focal
+FROM ubuntu:20.04
 
 # install bootstrap tools
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    build-essential \
-    python3-rosdep \
-    python3-rosinstall \
-    python3-vcstools \
-    && rm -rf /var/lib/apt/lists/*
 
-# bootstrap rosdep
-RUN rosdep init && \
-  rosdep update --rosdistro noetic
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    python3-vcstools \
+    curl \
+		wget \
+    gnupg \
+		gnupg2 \
+		lsb-release \
+		ca-certificates 
+
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-latest.list'
+
 
 # install ros packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-noetic-ros-base=1.5.0-1* \
+    ros-noetic-ros-base \
+    ros-noetic-rosbash \
+    ros-noetic-tf \
+    ros-noetic-tf2-ros \
     && rm -rf /var/lib/apt/lists/*
+
+    
