@@ -36,13 +36,12 @@ RUN echo "yaml https://raw.githubusercontent.com/UbiquityRobotics/rosdep/master/
 
 # download all packages and dependencies
 RUN apt update && apt-get install -y $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances ${PACKAGES} | grep "^\w" | sort -u)
-RUN pip3 install -U netifaces defusedxml empy
+RUN pip3 install -U netifaces defusedxml
 
-RUN export PATH="/root/.local/bin:$PATH" rosdep init && rosdep update 
+RUN rosdep init && rosdep update 
 RUN wstool init src
 
 RUN . /opt/ros/noetic/setup.sh \
-    && export PATH="/root/.local/bin:$PATH" \
     && cd /root/catkin_ws/src/ \
     && catkin_init_workspace  \
     && cd /root/catkin_ws  \
@@ -57,7 +56,7 @@ RUN . /opt/ros/noetic/setup.sh \
     && wstool merge -t src diagnostics-wet.rosinstall \
     && wstool update -t src \
     && rosdep install --from-paths src --ignore-src --rosdistro=noetic -y \
-    && export PATH="/root/.local/bin:$PATH" catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release 
+    && catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release 
 
 FROM balenalib/raspberrypi4-64-debian as runtime 
 
