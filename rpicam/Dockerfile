@@ -12,14 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-catkin-pkg \
     python3-catkin-tools \
     ros-noetic-catkin \
-    python-catkin-pkg \
-    python-rosdep \
-    python-rosdistro \
-    python-rosinstall \
-    python-rosinstall-generator \
-    python-rospkg \
-    python-vcstools \
-    python-wstool \
+    python3-catkin-pkg \
+    python3-rosdep \
+    python3-rosdistro \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-rospkg \
+    python3-vcstools \
+    python3-wstool \
     libboost-dev \
     && rm -rf /var/lib/apt/lists/* 
 
