@@ -18,8 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rosinstall \
     python3-rosinstall-generator \
     python3-rospkg \
-    python-vcstools \
-    python-wstool \
+    python3-vcstools \
+    python3-wstool \
     libboost-dev \
     && rm -rf /var/lib/apt/lists/* 
 
