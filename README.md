@@ -74,54 +74,103 @@ mkdir -p ~/catkin_ws/src/ \
 && git clone https://github.com/YOUR_REPOSITORY
 ```
 
-### 3. Source ROS environment 
+### 2. Install dependencies 
+This is probably the most tricky part of this whole process. We want to be able to layer any number of ROS images on top of the ROSCore container and share common binaries to save space. Therefore, we want to bundle all the dependencies together with our ROS package. We'll use `wstool` and `rosinstall_generator` to pull the source of our dependencies and import them into our `catkin_ws` folder.
 
-```bash
-. /opt/ros/noetic/setup.sh 
-```
-### 4. Install dependencies 
-
+#### 2.1. Initialize the toolkit: 
 ```bash
 cd /root/catkin_ws/src && catkin_init_workspace 
 ```
-This will create the correct folder structure for catkin. 
-
 ```bash
 rosdep init && rosdep update
 ```
-rosdep is a command-line tool for installing system dependencies. You can use it to install any ROS package, or pull all dependencies you need. 
+```bash
+cd /root/catkin_ws && wstool init src 
+```
+#### 2.2. Check `package.xml` 
+An important file for every ROS package is it's manifest, the `package.xml` file. You can find all the dependencies the package use
 
+Here's a snippet from the `package.xml` file of ... :
+```xml
+<?xml version="1.0"?>
+	....
+	<depend>compressed_image_transport</depend>
+	<depend>roscpp</depend>
+	<depend>std_msgs</depend>
+	<depend>std_srvs</depend>
+	<depend>sensor_msgs</depend>
+	<depend>camera_info_manager</depend>
+	<depend>dynamic_reconfigure</depend>
+	<depend>diagnostic_updater</depend>
+	<depend>libraspberrypi0</depend>
+	....
+```
 
-### 4. Build the ROS package
-If you are trying to build a package found on the web, you might want to check their official repository for more accurate build and installation instructions. If you are working on your own code, this is a good place to start.
+Ok, let's go trough these and figure out what's what. `roscpp`, `std_msgs`, `std_srvs`, `sensor_msgs` are all part of the core ROS installation, they are already taken care of. `libraspberrypi0` is an external dependency that needs to be installed from apt.
 
-Move into catkin's root folder:
-```bash 
+So, the packages we are concerned are: `camera_info_manager`, `dynamic_reconfigure`, `diagnostic_updater`, `compressed_image_transport`. 
+Let's see how we can install them. 
+
+#### 2.3. Add dependencies to source folder 
+Move into the root of our workspace:
+```bash
 cd /root/catkin_ws 
 ```
-Use `rospack` to install your dependencies. 
-```bash 
-rosdep install --from-paths src --ignore-src --rosdistro=noetic -y 
+At this point we can use `rosinstall_generator` to pull the source of all the required packages and `wstool` to add it to the build list. 
+
+
+```bash
+rosinstall_generator compressed_image_transport --rosdistro noetic --tar > compressed_image_transport.rosinstall 
+wstool merge -t src compressed_image_transport.rosinstall
 ```
 
-Build packages:
+```bash
+rosinstall_generator camera_info_manager --rosdistro noetic --tar > camera_info_manager.rosinstall 
+wstool merge -t src camera_info_manager.rosinstall
+```
+```bash
+rosinstall_generator dynamic_reconfigure --rosdistro noetic --tar > dynamic_reconfigure.rosinstall 
+wstool merge -t src dynamic_reconfigure.rosinstall
+```
+```bash
+rosinstall_generator diagnostics --rosdistro noetic --tar > diagnostics.rosinstall
+wstool merge -t src diagnostics.rosinstall 
+```
+
+```bash
+wstool update -t src
+```
+All these commands prepare catkin to build all the dependencies before building our package.
+
+Not all dependencies are ROS packages,  but we can use rospack to install any other system libraries we might be missing.  
+```bash 
+rosdep install --from-paths src --ignore-src --rosdistro=noetic --os=ubuntu:focal -y 
+```
+
+We are finally ready to build everything 
+
+### 3. Build everything
+If you are trying to build a package found on the web, you might want to check their official repository for more accurate build and installation instructions. If you are working on your own code, this is a good place to start.
+
 ```bash 
 catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release 
+catkin_make install 
 ```
 
-### 6.  Create runtime image
-**Start from a base image**
+### 4.  Create runtime image
+**4.1. Start from a base image**
 ```bash 
 FROM balenalib/rpi-raspbian:bullseye as runtime
 ```
 
-**Move artifacts from the to runtime image.**
-I usually move the whole catkin workspace to the runtime image, but you could get more granular if you want to save more space, however that requires some deeper knowledge about catkin and the package you are trying to build. 
+**4.2. Move artifacts from the to runtime image.**
+I usually move the whole catkin workspace to the runtime image, but you could get more granular if you want to save more space. However that requires some deeper knowledge about catkin and the package you are trying to build. 
+
 ```bash 
 COPY --from=builder /root/catkin_ws/src/ /root/catkin_ws/src/
 ```
 
-#### 7. Install runtime dependencies 
+### 5. Install runtime dependencies 
 First off, you will need the following libraries to be able to use the shared ROS binaries. Every balenified ROS image needs these libraries:   
 
 ```bash
@@ -136,10 +185,16 @@ install_packages \
 	libtinyxml2-dev 
 ```
 
+
+
 ```bash
 pip3 install defusedxml netifaces
 ```
-#### 8. Set entrypoint 
+
+
+### 6. Set entrypoint 
+
+Congrats, if you followed along with this, you should have a ready to deploy ROS package for balena. 
 
 # Robotics Images
 

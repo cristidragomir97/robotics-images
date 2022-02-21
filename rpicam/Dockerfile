@@ -21,8 +21,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-vcstools \
     python3-wstool \
     libboost-dev \
+    libboost-thread-dev \
+    libboost-program-options-dev \
+    libboost-filesystem-dev \
+    libboost-regex-dev \
+    libboost-chrono-dev \
+    libconsole-bridge-dev \
+    liblog4cxx-dev \
+    libtinyxml2-dev \
     && rm -rf /var/lib/apt/lists/* 
-
 
 # clone rosboard
 RUN mkdir -p ~/catkin_ws/src/ \
@@ -38,29 +45,41 @@ RUN echo "yaml https://raw.githubusercontent.com/UbiquityRobotics/rosdep/master/
 RUN apt update && apt-get install -y $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances ${PACKAGES} | grep "^\w" | sort -u)
 RUN pip3 install -U netifaces defusedxml empy
 
-RUN export PATH="/root/.local/bin:$PATH" rosdep init && rosdep update 
-RUN wstool init src
+RUN rosdep init && rosdep update 
 
+# initialise 
 RUN . /opt/ros/noetic/setup.sh \
-    && export PATH="/root/.local/bin:$PATH" \
     && cd /root/catkin_ws/src/ \
-    && catkin_init_workspace  \
-    && cd /root/catkin_ws  \
-    && wstool init src \
-    && rosinstall_generator compressed_image_transport --rosdistro noetic --wet-only --tar > compressed_image_transport-wet.rosinstall \
-    && rosinstall_generator camera_info_manager --rosdistro noetic --wet-only  --tar > camera_info_manager-wet.rosinstall \ 
-    && rosinstall_generator dynamic_reconfigure --rosdistro noetic --wet-only --tar > dynamic_reconfigure-wet.rosinstall \
-    && rosinstall_generator diagnostics --rosdistro noetic --wet-only --tar > diagnostics-wet.rosinstall \
-    && wstool merge -t src compressed_image_transport-wet.rosinstall \
-    && wstool merge -t src camera_info_manager-wet.rosinstall \
-    && wstool merge -t src dynamic_reconfigure-wet.rosinstall \
-    && wstool merge -t src diagnostics-wet.rosinstall \
-    && wstool update -t src \
-    && rosdep install --from-paths src --ignore-src --rosdistro=noetic -y --os=ubuntu:focal --skip-keys="libboost-dev" --skip-keys="boost" \
-    && export PATH="/root/.local/bin:$PATH" catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release 
+    && catkin_init_workspace  
+
+# initialise ws_tool
+RUN cd /root/catkin_ws  \
+    && wstool init src 
+
+## pull source for dependencies 
+RUN cd /root/catkin_ws \
+    && rosinstall_generator compressed_image_transport --rosdistro noetic --wet-only --tar > compressed_image_transport.rosinstall \
+    && rosinstall_generator camera_info_manager --rosdistro noetic --wet-only  --tar > camera_info_manager.rosinstall \ 
+    && rosinstall_generator dynamic_reconfigure --rosdistro noetic --wet-only --tar > dynamic_reconfigure.rosinstall \
+    && rosinstall_generator diagnostics --rosdistro noetic --wet-only --tar > diagnostics.rosinstall 
+
+## use wstool
+RUN cd /root/catkin_ws \
+    && wstool merge -t src compressed_image_transport.rosinstall \
+    && wstool merge -t src camera_info_manager.rosinstall \
+    && wstool merge -t src dynamic_reconfigure.rosinstall \
+    && wstool merge -t src diagnostics.rosinstall \
+    && wstool update -t src 
+
+# build packages
+RUN . /opt/ros/noetic/setup.sh \
+    && cd /root/catkin_ws \
+    && rosdep install --from-paths src --ignore-src --rosdistro=noetic -y --os=ubuntu:focal  \
+    && catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release 
 
 FROM balenalib/raspberrypi4-64-debian as runtime 
 
+# install raspberry pi camera dependencies 
 RUN apt update && apt-get install -y $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances libraspberrypi | grep "^\w" | sort -u)
 
 RUN apt update && apt-get install -y \
@@ -73,10 +92,8 @@ RUN apt update && apt-get install -y \
     liblog4cxx-dev \
     libtinyxml2-dev 
 
-COPY --from=builder /root/.local /root/.local
 COPY --from=builder /root/catkin_ws/src/ /root/catkin_ws/src/
 
-RUN export PYTHONPATH="${PYTHONPATH}:/opt/ros/noetic/lib/python3/dist-packages"
-
-
-CMD . /opt/ros/noetic/setup.sh && roslaunch raspicam_node camerav2_1280x960.launch
+CMD  . /root/catkin_ws/devel/setup.sh \
+    && export PYTHONPATH="${PYTHONPATH}:/opt/ros/noetic/lib/python3/dist-packages" \
+    && roslaunch raspicam_node camerav2_1280x960.launch

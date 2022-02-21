@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 		gnupg2 \
 		lsb-release \
 		ca-certificates 
-
+ 
 # Add ROS Repository Key
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 
@@ -21,6 +21,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-rosbash \
     ros-noetic-tf \
     ros-noetic-tf2-ros \
-    && rm -rf /var/lib/apt/lists/*
+    python3-dev \
+    python3 \
+    python3-pip \
+    python3-catkin-pkg \
+    python3-catkin-tools \
+    python3-catkin-pkg \
+    python3-rosdep \
+    python3-rosdistro \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-rospkg \
+    python3-vcstools \
+    python3-wstool 
 
     
