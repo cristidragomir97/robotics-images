@@ -39,10 +39,10 @@ RUN . /opt/ros/noetic/setup.sh \
     && catkin_init_workspace  \
     && cd /root/catkin_ws  \
     && wstool init src \
-    && rosinstall_generator compressed_image_transport --rosdistro noetic --wet-only --deps --tar > compressed_image_transport-wet.rosinstall \
-    && rosinstall_generator camera_info_manager --rosdistro noetic --wet-only --deps --tar > camera_info_manager-wet.rosinstall \ 
-    && rosinstall_generator dynamic_reconfigure --rosdistro noetic --wet-only --deps --tar > dynamic_reconfigure-wet.rosinstall \
-    && rosinstall_generator diagnostics --rosdistro noetic --wet-only --deps --tar > diagnostics-wet.rosinstall \
+    && rosinstall_generator compressed_image_transport --rosdistro noetic --wet-only --tar > compressed_image_transport-wet.rosinstall \
+    && rosinstall_generator camera_info_manager --rosdistro noetic --wet-only  --tar > camera_info_manager-wet.rosinstall \ 
+    && rosinstall_generator dynamic_reconfigure --rosdistro noetic --wet-only --tar > dynamic_reconfigure-wet.rosinstall \
+    && rosinstall_generator diagnostics --rosdistro noetic --wet-only --tar > diagnostics-wet.rosinstall \
     && wstool merge -t src compressed_image_transport-wet.rosinstall \
     && wstool merge -t src camera_info_manager-wet.rosinstall \
     && wstool merge -t src dynamic_reconfigure-wet.rosinstall \
