@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04 AS builder
 
 RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
@@ -53,3 +53,11 @@ RUN . /opt/ros/noetic/setup.sh \
 
 # SOURCE ROS ENVIRONMENT FROM SHARED VOLUMEs
 # AND RUN THE APPLICATION
+
+########
+# RUNTIME
+########P∏
+FROM python:3.9-slim-bullseye AS runtime
+COPY --from=builder /root/catkin_ws/src/ /root/catkin_ws/src/
+RUN pip install tornado simplejpeg 
+CMD . /opt/ros/noetic/setup.sh && ./root/catkin_ws/src/rosboard/run
