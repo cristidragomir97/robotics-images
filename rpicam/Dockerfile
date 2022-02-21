@@ -12,9 +12,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-catkin-pkg \
     python3-catkin-tools \
     ros-noetic-catkin \
+    python-catkin-pkg \
+    python-rosdep \
+    python-rosdistro \
+    python-rosinstall \
+    python-rosinstall-generator \
+    python-rospkg \
+    python-vcstools \
+    python-wstool \
     libboost-dev \
-
     && rm -rf /var/lib/apt/lists/* 
+
 
 # clone rosboard
 RUN mkdir -p ~/catkin_ws/src/ \
@@ -28,7 +36,7 @@ RUN echo "yaml https://raw.githubusercontent.com/UbiquityRobotics/rosdep/master/
 
 # download all packages and dependencies
 RUN apt update && apt-get install -y $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances ${PACKAGES} | grep "^\w" | sort -u)
-RUN pip3 install -U netifaces defusedxml empy rospkg rosinstall-generator wstool rosdep 
+RUN pip3 install -U netifaces defusedxml empy
 
 RUN export PATH="/root/.local/bin:$PATH" rosdep init && rosdep update 
 RUN wstool init src
