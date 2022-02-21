@@ -56,7 +56,7 @@ RUN . /opt/ros/noetic/setup.sh \
     && wstool merge -t src dynamic_reconfigure-wet.rosinstall \
     && wstool merge -t src diagnostics-wet.rosinstall \
     && wstool update -t src \
-    && rosdep install --from-paths src --ignore-src --rosdistro=noetic -y --os=ubuntu:focal \
+    && rosdep install --from-paths src --ignore-src --rosdistro=noetic -y --os=ubuntu:focal --skip-keys="libboost-dev" --skip-keys="boost" \
     && export PATH="/root/.local/bin:$PATH" catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release 
 
 FROM balenalib/raspberrypi4-64-debian as runtime 
