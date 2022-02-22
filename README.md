@@ -143,11 +143,12 @@ wstool update -t src
 All these commands prepare catkin to build all the dependencies before building our package.
 
 Not all dependencies are ROS packages,  but we can use rospack to install any other system libraries we might be missing.  
+
 ```bash 
 rosdep install --from-paths src --ignore-src --rosdistro=noetic --os=ubuntu:focal -y 
 ```
 
-We are finally ready to build everything 
+We are finally ready to build everything, 
 
 ### 3. Build everything
 If you are trying to build a package found on the web, you might want to check their official repository for more accurate build and installation instructions. If you are working on your own code, this is a good place to start.
@@ -158,7 +159,10 @@ catkin_make install
 ```
 
 ### 4.  Create runtime image
+
 **4.1. Start from a base image**
+I obviously recommend choosing [balena base images]() for a few reasons : 
+Also, you'd be making easier for us to help you in case you get stuck. 
 ```bash 
 FROM balenalib/rpi-raspbian:bullseye as runtime
 ```
@@ -168,9 +172,10 @@ I usually move the whole catkin workspace to the runtime image, but you could ge
 
 ```bash 
 COPY --from=builder /root/catkin_ws/src/ /root/catkin_ws/src/
-```
+``` 
 
 ### 5. Install runtime dependencies 
+
 First off, you will need the following libraries to be able to use the shared ROS binaries. Every balenified ROS image needs these libraries:   
 
 ```bash
@@ -184,37 +189,49 @@ install_packages \
 	liblog4cxx-dev \
 	libtinyxml2-dev 
 ```
-
-
-
 ```bash
 pip3 install defusedxml netifaces
 ```
+I might create volume shares for libboost binaries and python packages (maybe even opencv) as they are repeated in many services, but the size difference seems deeecent for now. 
 
+### 6. Profit 
+Ok, that's about it. The last step in this process is to add the `CMD` line that runs when the service starts. 
 
-### 6. Set entrypoint 
+First we need to add all the binaries in the core ROS installation from the volume share and the additional packages that we just built to the path:
 
-Congrats, if you followed along with this, you should have a ready to deploy ROS package for balena. 
+`source /opt/ros/noetic/setup.sh`
+`source /root/catkin_ws/devel/setup.sh `
 
-# Robotics Images
+Now, launch a package configuration using either `rosrun` or `roslaunch`
+
+# Plug-n-play Images
 
 ## Hardware Abstraction
-These images are meant to simplify working with complex external hardware like LIDARs, cameras, that usually come with a ROS package from their vendors. 
+These images are meant to simplify working with complex external hardware like LIDARs, cameras, that usually come with a ROS package from their vendors. Once you add them in you
 
-#### Raspberry Pi Camera 
-Thhttps://github.com/UbiquityRobotics/raspicam_node
+### Raspberry Pi Camera 
+Based on 
+![](https://projects-static.raspberrypi.org/projects/getting-started-with-picamera/7ab130979e77e11eb977625713823e41ebe1ae64/en/images/pi-camera-attached.jpg)
 
-#### RPLidar
-Based on SLAMTEC's official [ROS package](https://github.com/Slamtec/rplidar_ros), this image provides plug and play functionality for the RPLidar series of LIDAR sensors. On runtime, you'll see the information from this sensor on the `/scan` topic. 
+### RPLidar
 
-#### Intel Realsense 
+Based on SLAMTEC's official [ROS package](https://github.com/Slamtec/rplidar_ros), this image provides plug and play functionality for the RPLidar series of LIDAR sensors. On runtime, you'll see the information from this sensor on the `/scan` topic, and you'll be able to perform 2D SLAM. 
+
+![](https://www.slamtec.com/images/a1/summary-section3.jpg)
+
 
 ## Applications
-#### ROSboard
+### ROSCore
+You already know. 
+
+### ROSboard
 [ROSboard](https://github.com/dheera/rosboard) is a very useful tool that allows you to graph and visualize ROS information in real time. This provides the same functionality as RViz but it's in a web browser.
+
+![](https://aws1.discourse-cdn.com/business7/uploads/ros/original/2X/c/c33e39c92365664767cabab051cbf4fb8cff1cb6.jpeg)
 
 **Note:** Streaming video, pointcloud and other similar messages is quite computationally intensive. 
 
 ### HectorSLAM
-
+![](https://hackster.imgix.net/uploads/attachments/1181006/hector_slam_LpexAy664c.jpg)
+HectorSLAM is a great option for 2D mapping with sensors like RPLidar. It subscribes to the `/scan` topic and is able to perform SLAM without odometry and IMU data. However, both of those would help increase accuracy. 
 

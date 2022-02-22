@@ -77,7 +77,8 @@ RUN . /opt/ros/noetic/setup.sh \
     && rosdep install --from-paths src --ignore-src --rosdistro=noetic -y --os=ubuntu:focal  \
     && catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release 
 
-FROM balenalib/raspberrypi4-64-debian as runtime 
+
+FROM balenalib/raspberrypi4-64-debian:bullseye as runtime 
 
 # install raspberry pi camera dependencies 
 RUN apt update && apt-get install -y $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances libraspberrypi | grep "^\w" | sort -u)
@@ -92,8 +93,13 @@ RUN apt update && apt-get install -y \
     liblog4cxx-dev \
     libtinyxml2-dev 
 
-COPY --from=builder /root/catkin_ws/src/ /root/catkin_ws/src/
+COPY --from=builder /root/catkin_ws/ /root/catkin_ws/
+COPY entry.sh /usr/bin/entry.sh
 
-CMD  . /root/catkin_ws/devel/setup.sh \
+CMD source /opt/ros/noetic/setup.sh \
+    && source /root/catkin_ws/devel/setup.sh \
+    && cd /root/catkin_ws \
     && export PYTHONPATH="${PYTHONPATH}:/opt/ros/noetic/lib/python3/dist-packages" \
     && roslaunch raspicam_node camerav2_1280x960.launch
+
+    

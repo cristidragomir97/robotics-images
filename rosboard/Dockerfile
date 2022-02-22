@@ -1,15 +1,11 @@
-FROM ubuntu:20.04 AS builder
-
+FROM ubuntu:20.04
 RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG en_US.utf8
 ENV LC_ALL en_US.utf8
-
 ARG DEBIAN_FRONTEND=noninteractive
-
 # install bootstrap tools
-COPY --from=cristidragomir97/rospack:latest /opt/ros/ /opt/ros/
-
+COPY --from=cristidragomir97/roscore:latest /opt/ros/ /opt/ros/
 # install ros packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -31,13 +27,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
     && rm -rf /var/lib/apt/lists/* 
-
 RUN  pip3 install defusedxml netifaces simplejpeg tornado
 # clone thing
 RUN mkdir -p ~/catkin_ws/src/ \
     && cd ~/catkin_ws/src/ \
     && git clone https://github.com/dheera/rosboard
-
 # build thing
 RUN . /opt/ros/noetic/setup.sh \
     && cd /root/catkin_ws/src/ \
@@ -53,11 +47,6 @@ RUN . /opt/ros/noetic/setup.sh \
 
 # SOURCE ROS ENVIRONMENT FROM SHARED VOLUMEs
 # AND RUN THE APPLICATION
-
-########
-# RUNTIME
-########P∏
-FROM python:3.9-slim-bullseye AS runtime
-COPY --from=builder /root/catkin_ws/src/ /root/catkin_ws/src/
-RUN pip install tornado simplejpeg 
-CMD . /opt/ros/noetic/setup.sh && ./root/catkin_ws/src/rosboard/run
+CMD . /opt/ros/noetic/setup.sh \
+    && . /root/catkin_ws/devel/setup.sh \
+    && rosrun rosboard rosboard_node
