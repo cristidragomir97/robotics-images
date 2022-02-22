@@ -210,12 +210,14 @@ Now, launch a package configuration using either `rosrun` or `roslaunch`
 These images are meant to simplify working with complex external hardware like LIDARs, cameras, that usually come with a ROS package from their vendors. Once you add them in you
 
 ### Raspberry Pi Camera 
-Based on 
-![](https://projects-static.raspberrypi.org/projects/getting-started-with-picamera/7ab130979e77e11eb977625713823e41ebe1ae64/en/images/pi-camera-attached.jpg)
+Based on UbiquityRobotics' [ROS package](https://github.com/UbiquityRobotics/raspicam_node), this image provides plug and play functionality for the official Paspberry Pi camera. 
+On runtime, you'll see the information from this sensor on the `/image` and `/image/compressed`  topics.
+
+![](https://miro.medium.com/max/1400/1*XWjit_1tSxz87hOKCVWKhw.png)
 
 ### RPLidar
 
-Based on SLAMTEC's official [ROS package](https://github.com/Slamtec/rplidar_ros), this image provides plug and play functionality for the RPLidar series of LIDAR sensors. On runtime, you'll see the information from this sensor on the `/scan` topic, and you'll be able to perform 2D SLAM. 
+Based on SLAMTEC's official [ROS package](https://github.com/Slamtec/rplidar_ros), this image provides plug and play functionality for the RPLidar series of LIDAR sensors. On runtime, you'll see the information from this sensor on the `/scan` topic, and you'll be able to perform 2D SLAM using these data. 
 
 ![](https://www.slamtec.com/images/a1/summary-section3.jpg)
 
